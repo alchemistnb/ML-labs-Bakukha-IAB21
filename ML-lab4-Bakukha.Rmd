@@ -1,0 +1,62 @@
+---
+title: "ML-lab4-Bakukha"
+author: "Bakukha-IAB21"
+date: "13 05 2022"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+**Read data**
+```{r}
+library(caret)
+library(randomForest)
+trainRaw <- read.csv("pml-training.csv")
+testRaw <- read.csv("pml-testing.csv")
+```
+
+**Clean data**
+```{r}
+completeCases <- complete.cases(t(trainRaw)) & complete.cases(t(testRaw))
+trainRaw <- trainRaw[,completeCases]
+trainData <- trainRaw[,-c(1:7)]
+columns <- colnames(trainData)
+columns <- columns[-length(columns)]
+testData <- subset(testRaw, select=c(columns))
+trainData$classe <- as.factor(trainData$classe)
+```
+
+**Dividing train data into train and validation sets**
+```{r}
+set.seed(1612) 
+inTrain <- createDataPartition(trainData$classe, p=0.70, list=F)
+trainData <- trainData[inTrain, ]
+validationData <- trainData[-inTrain, ]
+```
+
+**Train model**
+```{r}
+model <- randomForest(classe ~ ., data=trainData)
+model
+```
+**Estimate performance on train data**
+```{r}
+prediction <- predict(model, trainData)
+confusionMatrix(trainData$classe, prediction)
+```
+**Estimate performance on validation data**
+```{r}
+prediction2 <- predict(model, validationData)
+confusionMatrix(validationData$classe, prediction2)
+```
+
+**Predict on test data and create prediction file**
+```{r}
+predictionTest <- predict(model, newdata=testData)
+predictionTest
+predictionForFile <- read.csv("pml-testing.csv")
+predictionForFile$classe <- predictionTest
+write.csv(predictionForFile, 'prediction.csv')
+```

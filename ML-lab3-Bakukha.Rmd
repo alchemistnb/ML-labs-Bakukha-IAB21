@@ -1,0 +1,48 @@
+---
+title: "ML-lab3-Bakukha"
+author: "Bakukha-IAB21"
+date: "13 05 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.csv("donner_party.csv")
+# delete data that have NA values
+data <- na.omit(data)
+# convert target variable (Survived) to factor
+data$Survived<-as.factor(data$Survived)
+
+head(data)
+```
+
+
+
+```{r}
+# code for regression
+library("caret")
+# train model using Generalized Linear Model
+model <- train(Survived ~ Sex + Age, method="glm", data=data)
+prediction <-predict(model, data)
+```
+Build a confusion matrix
+
+```{r}
+# code for confusion matrix
+confusionMatrix(prediction, data$Survived)
+```
+
+```{r}
+# code for cross-validation
+# train new model using cross-validation
+model2 <- train(Survived ~ Sex + Age, method="glm", data=data, trControl=trainControl(method="repeatedcv", number=5, repeats=10))
+prediction2 <- predict(model2, data)
+
+confusionMatrix(prediction2, data$Survived)
+
+```
+
+**Cross-vallidation didn't improve the accuracy**
